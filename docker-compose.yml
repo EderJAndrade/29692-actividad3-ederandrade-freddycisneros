@@ -1,0 +1,110 @@
+services:
+  db-authors:
+    image: mysql:8.4
+    container_name: db-authors
+    environment:
+      MYSQL_ROOT_PASSWORD: ${AUTHORS_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${AUTHORS_DB_NAME}
+      MYSQL_USER: ${AUTHORS_DB_USER}
+      MYSQL_PASSWORD: ${AUTHORS_DB_PASSWORD}
+    ports:
+      - "33061:3306"
+    volumes:
+      - db-authors-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$AUTHORS_DB_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    networks:
+      - app-net
+
+  db-publications:
+    image: mysql:8.4
+    container_name: db-publications
+    environment:
+      MYSQL_ROOT_PASSWORD: ${PUBLICATIONS_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${PUBLICATIONS_DB_NAME}
+      MYSQL_USER: ${PUBLICATIONS_DB_USER}
+      MYSQL_PASSWORD: ${PUBLICATIONS_DB_PASSWORD}
+    ports:
+      - "33062:3306"
+    volumes:
+      - db-publications-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$PUBLICATIONS_DB_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    networks:
+      - app-net
+
+  authors-service:
+    build: ./authors-service
+    container_name: authors-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: ${AUTHORS_SERVICE_PORT}
+      DB_HOST: ${AUTHORS_DB_HOST}
+      DB_PORT: ${AUTHORS_DB_PORT}
+      DB_NAME: ${AUTHORS_DB_NAME}
+      DB_USER: ${AUTHORS_DB_USER}
+      DB_PASSWORD: ${AUTHORS_DB_PASSWORD}
+    ports:
+      - "${AUTHORS_SERVICE_PORT}:${AUTHORS_SERVICE_PORT}"
+    depends_on:
+      db-authors:
+        condition: service_healthy
+    networks:
+      - app-net
+
+  publications-service:
+    build: ./publications-service
+    container_name: publications-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: ${PUBLICATIONS_SERVICE_PORT}
+      DB_HOST: ${PUBLICATIONS_DB_HOST}
+      DB_PORT: ${PUBLICATIONS_DB_PORT}
+      DB_NAME: ${PUBLICATIONS_DB_NAME}
+      DB_USER: ${PUBLICATIONS_DB_USER}
+      DB_PASSWORD: ${PUBLICATIONS_DB_PASSWORD}
+      AUTHORS_BASE_URL: ${AUTHORS_SERVICE_BASE_URL}
+      AUTHORS_HTTP_TIMEOUT_MS: ${AUTHORS_HTTP_TIMEOUT_MS}
+    ports:
+      - "${PUBLICATIONS_SERVICE_PORT}:${PUBLICATIONS_SERVICE_PORT}"
+    depends_on:
+      db-publications:
+        condition: service_healthy
+      authors-service:
+        condition: service_started
+    networks:
+      - app-net
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_AUTHORS_API_URL: ${VITE_AUTHORS_API_URL}
+        VITE_PUBLICATIONS_API_URL: ${VITE_PUBLICATIONS_API_URL}
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT}:80"
+    depends_on:
+      - authors-service
+      - publications-service
+    networks:
+      - app-net
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  db-authors-data:
+  db-publications-data:

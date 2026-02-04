@@ -1,0 +1,18 @@
+### Health
+GET http://localhost:3001/health
+
+### Crear autor
+POST http://localhost:3001/authors
+Content-Type: application/json
+
+{
+  "name": "Gabriel García Márquez",
+  "email": "gabo@example.com",
+  "penName": "Gabo"
+}
+
+### Obtener autor
+GET http://localhost:3001/authors/1
+
+### Listar autores (paginación opcional)
+GET http://localhost:3001/authors?page=1&limit=10
