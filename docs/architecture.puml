@@ -1,0 +1,27 @@
+@startuml
+title Arquitectura - Autores y Publicaciones (microservicios)
+
+skinparam componentStyle rectangle
+
+node "Docker Network (app-net)" {
+  [frontend] as FE
+  [authors-service] as AS
+  [publications-service] as PS
+  database "db-authors (MySQL)" as DBA
+  database "db-publications (MySQL)" as DBP
+
+  FE --> AS : HTTP REST
+  FE --> PS : HTTP REST
+  PS --> AS : HTTP REST (validación/enriquecimiento)
+
+  AS --> DBA : ORM (TypeORM)
+  PS --> DBP : ORM (TypeORM)
+}
+
+note right of PS
+Publications depende de Authors:
+- valida authorId al crear
+- opcional: enriquece vista al consultar
+end note
+
+@enduml

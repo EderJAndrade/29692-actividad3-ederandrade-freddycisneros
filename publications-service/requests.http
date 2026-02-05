@@ -1,0 +1,45 @@
+### Health
+GET http://localhost:3002/health
+
+### Crear publicación (BOOK) - requiere authorId existente
+POST http://localhost:3002/publications
+Content-Type: application/json
+
+{
+  "title": "Cien años de soledad",
+  "content": "Contenido de ejemplo...",
+  "authorId": 1,
+  "type": "BOOK",
+  "isbn": "978-0307474728",
+  "genre": "Novela"
+}
+
+### Crear publicación (ARTICLE)
+POST http://localhost:3002/publications
+Content-Type: application/json
+
+{
+  "title": "Microservicios con Docker",
+  "content": "Contenido de ejemplo...",
+  "authorId": 1,
+  "type": "ARTICLE",
+  "topic": "Arquitectura",
+  "sourceUrl": "https://example.com/articulo"
+}
+
+### Obtener publicación (vista enriquecida con autor)
+GET http://localhost:3002/publications/1
+
+### Listar publicaciones
+GET http://localhost:3002/publications?page=1&limit=10
+
+### Filtrar por estado
+GET http://localhost:3002/publications?status=DRAFT
+
+### Cambiar estado editorial (PATCH)
+PATCH http://localhost:3002/publications/1/status
+Content-Type: application/json
+
+{
+  "status": "IN_REVIEW"
+}
