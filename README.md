@@ -103,6 +103,10 @@ cd 29692-actividad3-ederandrade-freddycisneros
 
 Crear `.env` o usar `.env.example`
 
+```bash
+cp .env.example .env
+```
+
 ---
 
 ## 3. Construir contenedores
